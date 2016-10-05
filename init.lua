@@ -2,11 +2,6 @@
 -- reference: https://github.com/lodestone/hyper-hacks/blob/master/hammerspoon/init.lua
 k = hs.hotkey.modal.new({}, "F17")
 
-k:bind('', 'l', nil, function()
-  hs.alert.show("hyper L")
-  k.triggered = true
-end)
-
 -- Enter Hyper Mode when F18 (Hyper/Capslock) is pressed
 pressedF18 = function()
   -- hs.alert.show("pressed F18")
@@ -26,7 +21,8 @@ end
 
 -- Bind the Hyper key
 f18 = hs.hotkey.bind({}, 'F18', pressedF18, releasedF18)
-
+f18s = hs.hotkey.bind({"shift"}, 'F18', pressedF18, releasedF18)
+f18c = hs.hotkey.bind({"command"}, 'F18', pressedF18, releasedF18)
 
 -- key bind functions (hyper / hyper-shift)
 
@@ -39,6 +35,13 @@ end
 
 function hs_bind(key, func)
   k:bind({"shift"}, key, nil, function()
+    func()
+    k.triggered = true
+  end)
+end
+
+function hc_bind(key, func)
+  k:bind({"command"}, key, nil, function()
     func()
     k.triggered = true
   end)
@@ -231,6 +234,17 @@ hs_bind("left", function() moveWindow("Left") end)
 hs_bind("right", function() moveWindow("Right") end)
 hs_bind("up", function() moveWindow("Up") end)
 hs_bind("down", function() moveWindow("Down") end)
+
+hc_bind("left", function()
+    hs.alert.show("Previous Track")
+    hs.eventtap.event.newSystemKeyEvent("PREVIOUS", true):post() 
+    hs.eventtap.event.newSystemKeyEvent("PREVIOUS", false):post() 
+end)
+hc_bind("right", function()
+    hs.alert.show("Next Track")
+    hs.eventtap.event.newSystemKeyEvent("NEXT", true):post() 
+    hs.eventtap.event.newSystemKeyEvent("NEXT", false):post() 
+end)
 
 h_bind("H", function() resizeWindow("Left", 1/6) end)
 h_bind("L", function() resizeWindow("Right", 1/6) end)
