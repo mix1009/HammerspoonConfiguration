@@ -235,17 +235,6 @@ hs_bind("right", function() moveWindow("Right") end)
 hs_bind("up", function() moveWindow("Up") end)
 hs_bind("down", function() moveWindow("Down") end)
 
-hc_bind("left", function()
-    hs.alert.show("Previous Track")
-    hs.eventtap.event.newSystemKeyEvent("PREVIOUS", true):post() 
-    hs.eventtap.event.newSystemKeyEvent("PREVIOUS", false):post() 
-end)
-hc_bind("right", function()
-    hs.alert.show("Next Track")
-    hs.eventtap.event.newSystemKeyEvent("NEXT", true):post() 
-    hs.eventtap.event.newSystemKeyEvent("NEXT", false):post() 
-end)
-
 h_bind("H", function() resizeWindow("Left", 1/6) end)
 h_bind("L", function() resizeWindow("Right", 1/6) end)
 h_bind("K", function() resizeWindow("Up", 1/4) end)
@@ -266,6 +255,7 @@ h_bind("5", function() positionWindow(0, 0.5, 0.5, 0.5) end)
 h_bind("6", function() positionWindow(0.5, 0.5, 0.5, 0.5) end)
 h_bind("F", function() toggleFullScreen() end)
 
+hs.window.animationDuration = 0
 
 -- app launch/activate key bindings
 
@@ -296,6 +286,18 @@ hs_bind("w", function() launchApp("Wunderlist") end)
 h_bind("v", function() activateApp("VLC") end)
 h_bind("y", function() launchApp("SourceTree") end)
 
-hs.window.animationDuration = 0
+
+-- media function with hyper-command keys
+
+function pressSystemKey(key)
+    hs.eventtap.event.newSystemKeyEvent(key, true):post() 
+    hs.eventtap.event.newSystemKeyEvent(key, false):post() 
+end
+
+hc_bind("left", function() pressSystemKey("PREVIOUS") end)
+hc_bind("right", function() pressSystemKey("NEXT") end)
+hc_bind("up", function() pressSystemKey("SOUND_UP") end)
+hc_bind("down", function() pressSystemKey("SOUND_DOWN") end)
+hc_bind("space", function() pressSystemKey("PLAY") end)
 
 
