@@ -24,6 +24,14 @@ f18 = hs.hotkey.bind({}, 'F18', pressedF18, releasedF18)
 f18s = hs.hotkey.bind({"shift"}, 'F18', pressedF18, releasedF18)
 f18c = hs.hotkey.bind({"command"}, 'F18', pressedF18, releasedF18)
 
+function pressHyperKey(key)
+  hs.eventtap.keyStroke({"cmd", "alt", "ctrl"}, key)
+end
+
+function pressHyperShiftKey(key)
+  hs.eventtap.keyStroke({"cmd", "alt", "ctrl", "shift"}, key)
+end
+
 -- key bind functions (hyper / hyper-shift)
 
 function h_bind(key, func)
@@ -75,20 +83,20 @@ function moveWindow(direction)
   if win == nil then return end
   local f = win:frame()
   local s = win:screen():frame()
-  if direction == "Left" then
-    f.x = f.x - s.w / 6
+  if direction == "left" then
+    f.x = f.x - s.w / 12
     if f.x < 0 then f.x = 0 end
     win:setFrame(f)
-  elseif direction == "Right" then
-    f.x = f.x + s.w / 6
+  elseif direction == "right" then
+    f.x = f.x + s.w / 12
     if f.x + f.w > s.w then f.x = s.w - f.w end
     win:setFrame(f)
-  elseif direction == "Up" then
-    f.y = f.y - s.h / 4
+  elseif direction == "up" then
+    f.y = f.y - s.h / 8
     if f.y < 0 then f.y = 0 end
     win:setFrame(f)
-  elseif direction == "Down" then
-    f.y = f.y + s.h / 4
+  elseif direction == "down" then
+    f.y = f.y + s.h / 8
     if f.y + f.h > s.h then f.y = s.h - f.h end
     win:setFrame(f)
   end
@@ -109,7 +117,7 @@ function resizeWindow(direction, increment)
   -- hs.alert.show((f.y + f.h))
   -- hs.alert.show(s.h - allowedSpace)
 
-  if direction == "Left" then
+  if direction == "left" then
     if stickedToLeft then
       f.x = 0
     elseif stickedToRight then
@@ -127,7 +135,7 @@ function resizeWindow(direction, increment)
       f.w = s.w * increment
     end
     win:setFrame(f)
-  elseif direction == "Right" then
+  elseif direction == "right" then
     if stickedToRight then
       f.w = f.w - s.w * increment
       f.x = s.w - f.w
@@ -143,7 +151,7 @@ function resizeWindow(direction, increment)
       end
       win:setFrame(f)
     end
-  elseif direction == "Up" then
+  elseif direction == "up" then
     if stickedToTop then
       f.y = 0
     elseif stickedToBottom then
@@ -161,7 +169,7 @@ function resizeWindow(direction, increment)
       f.h = s.h * increment
     end
     win:setFrame(f)
-  elseif direction == "Down" then
+  elseif direction == "down" then
     if stickedToBottom then
       -- hs.alert.show("stickedToBottom")
       f.h = f.h - s.h * increment
@@ -222,27 +230,35 @@ function toggleFullScreen()
   end
 end
 
+function resizeWindowFunc(direction, increment)
+  return function() resizeWindow(direction, increment) end
+end
+
+function moveWindowFunc(direction)
+  return function() moveWindow(direction) end
+end
+
 
 -- window management key bindings
 
-h_bind("left", function() resizeWindow("Left", 1/6) end)
-h_bind("right", function() resizeWindow("Right", 1/6) end)
-h_bind("up", function() resizeWindow("Up", 1/4) end)
-h_bind("down", function() resizeWindow("Down", 1/4) end)
+h_bind("left", resizeWindowFunc("left", 1/12))
+h_bind("right", resizeWindowFunc("right", 1/12))
+h_bind("up", resizeWindowFunc("up", 1/8))
+h_bind("down", resizeWindowFunc("down", 1/8))
 
-hs_bind("left", function() moveWindow("Left") end)
-hs_bind("right", function() moveWindow("Right") end)
-hs_bind("up", function() moveWindow("Up") end)
-hs_bind("down", function() moveWindow("Down") end)
+hs_bind("left", moveWindowFunc("left"))
+hs_bind("right", moveWindowFunc("right"))
+hs_bind("up", moveWindowFunc("up"))
+hs_bind("down", moveWindowFunc("down"))
 
-h_bind("H", function() resizeWindow("Left", 1/6) end)
-h_bind("L", function() resizeWindow("Right", 1/6) end)
-h_bind("K", function() resizeWindow("Up", 1/4) end)
-h_bind("J", function() resizeWindow("Down", 1/4) end)
-hs_bind("H", function() moveWindow("Left") end)
-hs_bind("L", function() moveWindow("Right") end)
-hs_bind("K", function() moveWindow("Up") end)
-hs_bind("J", function() moveWindow("Down") end)
+h_bind("h", resizeWindowFunc("left", 1/12))
+h_bind("l", resizeWindowFunc("right", 1/12))
+h_bind("k", resizeWindowFunc("up", 1/8))
+h_bind("j", resizeWindowFunc("down", 1/8))
+hs_bind("h", moveWindowFunc("left"))
+hs_bind("l", moveWindowFunc("right"))
+hs_bind("k", moveWindowFunc("up"))
+hs_bind("j", moveWindowFunc("down"))
 
 h_bind("q", function() positionWindow(0, 0, 0.667, 1) end)
 h_bind("w", function() positionWindow(0.667, 0, 0.333, 1) end)
@@ -253,51 +269,88 @@ h_bind("3", function() positionWindow(0, 0, 0.5, 0.5) end)
 h_bind("4", function() positionWindow(0.5, 0, 0.5, 0.5) end)
 h_bind("5", function() positionWindow(0, 0.5, 0.5, 0.5) end)
 h_bind("6", function() positionWindow(0.5, 0.5, 0.5, 0.5) end)
-h_bind("F", function() toggleFullScreen() end)
+h_bind("f", function() toggleFullScreen() end)
 
 hs.window.animationDuration = 0
 
 -- app launch/activate key bindings
 
 function activateApp(name)
-  local win = hs.appfinder.appFromName(name)
-  if win then win:activate() end
+  return function()
+    local win = hs.appfinder.appFromName(name)
+    if win then win:activate() end
+  end
 end
 
 function launchApp(name)
-  hs.application.launchOrFocus("/Applications/" .. name .. ".app")
+  return function()
+    hs.application.launchOrFocus("/Applications/" .. name .. ".app")
+  end
 end
 
-h_bind("C", function() launchApp("Google Chrome") end)
-h_bind("T", function() launchApp("iTerm") end)
-h_bind("S", function() launchApp("Safari") end)
+h_bind("c", launchApp("Google Chrome"))
+h_bind("t", launchApp("iTerm"))
+hs_bind("t", function() pressHyperShiftKey("t") end)
+h_bind("d", function() pressHyperShiftKey("d") end)
 
-hs_bind("S", function() activateApp("iOS Simulator") end)
-h_bind("E", function() activateApp("Sublime Text") end)
-hs_bind("E", function() activateApp("Evernote") end)
-h_bind("X", function() activateApp("Xcode") end)
-h_bind("Z", function() activateApp("Finder") end)
-h_bind("A", function() activateApp("Android Studio") end)
-h_bind("N", function() launchApp("Notes") end)
+h_bind("s", launchApp("Safari"))
 
-hs_bind("c", function() launchApp("CodeRunner") end)
-hs_bind("v", function() launchApp("VOX") end)
-hs_bind("w", function() launchApp("Wunderlist") end)
-h_bind("v", function() activateApp("VLC") end)
-h_bind("y", function() launchApp("SourceTree") end)
+hs_bind("s", activateApp("iOS Simulator"))
+h_bind("e", launchApp("Sublime Text"))
+hs_bind("e", activateApp("Evernote"))
+h_bind("x", activateApp("Xcode"))
+h_bind("z", activateApp("Finder"))
+hs_bind("a", activateApp("Android Studio"))
+h_bind("n", launchApp("Notes"))
+h_bind("i", activateApp("iTunes"))
+hc_bind("f", activateApp("Firefox"))
+hs_bind("o", activateApp("Opera"))
+
+hs_bind("c", launchApp("Calendar"))
+hs_bind("v", launchApp("VOX"))
+hs_bind("w", launchApp("Wunderlist"))
+h_bind("v", activateApp("VLC"))
+h_bind("y", launchApp("SourceTree"))
+h_bind("p", launchApp("Preview"))
+h_bind("b", function()
+    local win = hs.appfinder.appFromName("Sublime Text")
+    if win then win:activate() end
+    hs.eventtap.keyStroke({"cmd"}, "b")
+    win = hs.appfinder.appFromName("Minecraft")
+    if win then win:activate() end
+end)
 
 
 -- media function with hyper-command keys
 
-function pressSystemKey(key)
-    hs.eventtap.event.newSystemKeyEvent(key, true):post() 
-    hs.eventtap.event.newSystemKeyEvent(key, false):post() 
+function pressSystemKeyFunction(key)
+    return function()
+      hs.eventtap.event.newSystemKeyEvent(key, true):post() 
+      hs.eventtap.event.newSystemKeyEvent(key, false):post() 
+    end
 end
 
-hc_bind("left", function() pressSystemKey("PREVIOUS") end)
-hc_bind("right", function() pressSystemKey("NEXT") end)
-hc_bind("up", function() pressSystemKey("SOUND_UP") end)
-hc_bind("down", function() pressSystemKey("SOUND_DOWN") end)
-hc_bind("space", function() pressSystemKey("PLAY") end)
+hc_bind("left", pressSystemKeyFunction("PREVIOUS"))
+hc_bind("right", pressSystemKeyFunction("NEXT"))
+hc_bind("up", pressSystemKeyFunction("SOUND_UP"))
+hc_bind("down", pressSystemKeyFunction("SOUND_DOWN"))
+hc_bind("space", pressSystemKeyFunction("PLAY"))
 
 
+h_bind("a", function()
+  -- hs.alert.show("hyper-shift-A")
+  -- used for "Speak selected text"
+  pressHyperShiftKey("a")
+end)
+
+focusing = false
+
+hs_bind("f", function()
+  if not focusing then
+    hs.execute("open focus://focus?minutes=45")
+    focusing = true
+  else
+    hs.execute("open focus://unfocus")
+    focusing = false
+  end
+end)
