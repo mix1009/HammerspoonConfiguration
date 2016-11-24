@@ -35,7 +35,7 @@ end
 -- key bind functions (hyper / hyper-shift)
 
 function h_bind(key, func)
-  k:bind('', key, nil, function()
+  k:bind({}, key, nil, function()
     func()
     k.triggered = true
   end)
@@ -292,13 +292,18 @@ h_bind("c", launchApp("Google Chrome"))
 h_bind("t", launchApp("iTerm"))
 hs_bind("t", function() pressHyperShiftKey("t") end)
 h_bind("d", function() pressHyperShiftKey("d") end)
+h_bind("'", function() pressHyperShiftKey("'") end)
 
 h_bind("s", launchApp("Safari"))
 
 hs_bind("s", activateApp("iOS Simulator"))
-h_bind("e", launchApp("Sublime Text"))
+--h_bind("e", launchApp("Sublime Text"))
+h_bind("e", launchApp("Visual Studio Code"))
 hs_bind("e", activateApp("Evernote"))
 h_bind("x", activateApp("Xcode"))
+h_bind("u", activateApp("Unity"))
+h_bind("b", activateApp("Blender"))
+h_bind("m", activateApp("MonoDevelop-Unity"))
 h_bind("z", activateApp("Finder"))
 hs_bind("a", activateApp("Android Studio"))
 h_bind("n", launchApp("Notes"))
@@ -310,15 +315,16 @@ hs_bind("c", launchApp("Calendar"))
 hs_bind("v", launchApp("VOX"))
 hs_bind("w", launchApp("Wunderlist"))
 h_bind("v", activateApp("VLC"))
+hc_bind("v", activateApp("Code"))
 h_bind("y", launchApp("SourceTree"))
 h_bind("p", launchApp("Preview"))
-h_bind("b", function()
-    local win = hs.appfinder.appFromName("Sublime Text")
-    if win then win:activate() end
-    hs.eventtap.keyStroke({"cmd"}, "b")
-    win = hs.appfinder.appFromName("Minecraft")
-    if win then win:activate() end
-end)
+--h_bind("b", function()
+    --local win = hs.appfinder.appFromName("Sublime Text")
+    --if win then win:activate() end
+    --hs.eventtap.keyStroke({"cmd"}, "b")
+    --win = hs.appfinder.appFromName("Minecraft")
+    --if win then win:activate() end
+--end)
 
 
 -- media function with hyper-command keys
