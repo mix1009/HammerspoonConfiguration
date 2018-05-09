@@ -85,19 +85,19 @@ function moveWindow(direction)
   local s = win:screen():frame()
   if direction == "left" then
     f.x = f.x - s.w / 12
-    if f.x < 0 then f.x = 0 end
+    --if f.x < 0 then f.x = 0 end
     win:setFrame(f)
   elseif direction == "right" then
     f.x = f.x + s.w / 12
-    if f.x + f.w > s.w then f.x = s.w - f.w end
+    --if f.x + f.w > s.w then f.x = s.w - f.w end
     win:setFrame(f)
   elseif direction == "up" then
     f.y = f.y - s.h / 8
-    if f.y < 0 then f.y = 0 end
+    --if f.y < 0 then f.y = 0 end
     win:setFrame(f)
   elseif direction == "down" then
     f.y = f.y + s.h / 8
-    if f.y + f.h > s.h then f.y = s.h - f.h end
+    --if f.y + f.h > s.h then f.y = s.h - f.h end
     win:setFrame(f)
   end
 end
@@ -108,10 +108,11 @@ function resizeWindow(direction, increment)
   local f = win:frame()
   local s = win:screen():frame()
   local allowedSpace = s.h/10
-  local stickedToLeft = f.x < allowedSpace
-  local stickedToRight = f.x + f.w > s.w - allowedSpace
+  local stickedToLeft = (f.x % s.w) < allowedSpace
+  local stickedToRight = ((f.x + f.w) % s.w) > s.w - allowedSpace
   local stickedToTop = f.y < allowedSpace
   local stickedToBottom = f.y + f.h > s.h - allowedSpace
+  local screenOffset = math.floor(f.x / s.w) * s.w
 
   -- hs.alert.show(s.h)
   -- hs.alert.show((f.y + f.h))
@@ -119,12 +120,12 @@ function resizeWindow(direction, increment)
 
   if direction == "left" then
     if stickedToLeft then
-      f.x = 0
+      f.x = 0 + screenOffset
     elseif stickedToRight then
       f.w = f.w + s.w * increment
-      f.x = s.w - f.w
-      if f.x < allowedSpace then
-        f.x = 0
+      f.x = s.w - f.w + screenOffset
+      if (f.x % s.w) < allowedSpace then
+        f.x = 0 + screenOffset
         f.w = s.w
       end
       win:setFrame(f)
@@ -138,10 +139,10 @@ function resizeWindow(direction, increment)
   elseif direction == "right" then
     if stickedToRight then
       f.w = f.w - s.w * increment
-      f.x = s.w - f.w
+      f.x = s.w - f.w + screenOffset
       if f.w < s.w*increment then
         f.w = s.w * increment
-        f.x = s.w - f.w
+        f.x = s.w - f.w + screenOffset
       end
       win:setFrame(f)
     else
@@ -203,6 +204,20 @@ function positionWindow(x, y, w, h)
   win:setFrame(f)
 end
 
+function positionWindowWithinScreen(x, y, w, h)
+  local win = hs.window.focusedWindow()
+  if win == nil then return end
+  local f = win:frame()
+  local s = win:screen():frame()
+  local screenOffset = math.floor(f.x / s.w) * s.w
+
+  f.x = x * s.w + screenOffset
+  f.y = y * s.h
+  f.w = s.w * w
+  f.h = s.h * h
+  win:setFrame(f)
+end
+
 appNormalScreenFrame = {}
 appFullScreenFrame = {}
 
@@ -213,6 +228,7 @@ function toggleFullScreen()
   local s = win:screen():frame()
   local nf = appNormalScreenFrame[win.id]
   local ff = appFullScreenFrame[win.id]
+  local screenOffset = math.floor(f.x / s.w) * s.w
 
   if ff ~= nil then
     s = ff
@@ -222,7 +238,7 @@ function toggleFullScreen()
     win:setFrame(nf)
   else
     appNormalScreenFrame[win.id] = f
-    positionWindow(0,0,1,1)
+    positionWindowWithinScreen(0,0,1,1)
     local f = win:frame()
     if not (f.h == s.h) then
       appFullScreenFrame[win.id] = f
@@ -260,15 +276,21 @@ hs_bind("l", moveWindowFunc("right"))
 hs_bind("k", moveWindowFunc("up"))
 hs_bind("j", moveWindowFunc("down"))
 
-h_bind("q", function() positionWindow(0, 0, 0.667, 1) end)
-h_bind("w", function() positionWindow(0.667, 0, 0.333, 1) end)
+h_bind("q", function() positionWindowWithinScreen(0, 0, 0.667, 1) end)
+h_bind("w", function() positionWindowWithinScreen(0.667, 0, 0.333, 1) end)
 
 h_bind("1", function() positionWindow(0, 0, 0.5, 1) end)
 h_bind("2", function() positionWindow(0.5, 0, 0.5, 1) end)
-h_bind("3", function() positionWindow(0, 0, 0.5, 0.5) end)
-h_bind("4", function() positionWindow(0.5, 0, 0.5, 0.5) end)
-h_bind("5", function() positionWindow(0, 0.5, 0.5, 0.5) end)
-h_bind("6", function() positionWindow(0.5, 0.5, 0.5, 0.5) end)
+
+if #hs.screen.allScreens() > 1  then
+  h_bind("3", function() positionWindow(1, 0, 0.5, 1) end)
+  h_bind("4", function() positionWindow(1.5, 0, 0.5, 1) end)
+else
+  h_bind("3", function() positionWindow(0, 0, 0.5, 0.5) end)
+  h_bind("4", function() positionWindow(0.5, 0, 0.5, 0.5) end)
+  h_bind("5", function() positionWindow(0, 0.5, 0.5, 0.5) end)
+  h_bind("6", function() positionWindow(0.5, 0.5, 0.5, 0.5) end)
+end
 h_bind("f", function() toggleFullScreen() end)
 
 hs.window.animationDuration = 0
@@ -292,7 +314,7 @@ h_bind("c", launchApp("Google Chrome"))
 h_bind("t", launchApp("iTerm"))
 hs_bind("t", function() pressHyperShiftKey("t") end)
 h_bind("d", function() pressHyperShiftKey("d") end)
-h_bind("'", function() pressHyperShiftKey("'") end)
+--h_bind("'", function() pressHyperShiftKey("'") end)
 
 h_bind("s", launchApp("Safari"))
 
@@ -302,15 +324,21 @@ h_bind("e", launchApp("Visual Studio Code"))
 hs_bind("e", activateApp("Evernote"))
 h_bind("x", activateApp("Xcode"))
 h_bind("u", activateApp("Unity"))
-h_bind("b", activateApp("Blender"))
+
+hs_bind("s", activateApp("Slack"))
+hs_bind("t", activateApp("Telegram"))
+hs_bind("d", activateApp("Discord"))
+
+--h_bind("b", activateApp("Blender"))
+h_bind("b", activateApp("Brave"))
 h_bind("m", activateApp("MonoDevelop-Unity"))
 h_bind("z", activateApp("Finder"))
 hs_bind("a", activateApp("Android Studio"))
 h_bind("n", launchApp("Notes"))
 h_bind("i", activateApp("iTunes"))
 hc_bind("f", activateApp("Firefox"))
-hs_bind("o", activateApp("Opera"))
-
+hs_bind("o", activateApp("Opera")) 
+hs_bind("q", activateApp("QuickTime Player"))
 hs_bind("c", launchApp("Calendar"))
 hs_bind("v", launchApp("VOX"))
 hs_bind("w", launchApp("Wunderlist"))
@@ -325,7 +353,6 @@ h_bind("p", launchApp("Preview"))
     --win = hs.appfinder.appFromName("Minecraft")
     --if win then win:activate() end
 --end)
-
 
 -- media function with hyper-command keys
 
