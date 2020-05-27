@@ -1,0 +1,30 @@
+{
+    "title": "mix1009",
+    "rules": [
+        {
+            "manipulators": [
+                {
+                    "description": "Change caps_lock to command+control+option.",
+                    "from": {
+                        "key_code": "caps_lock",
+                        "modifiers": {
+                            "optional": [
+                                "any"
+                            ]
+                        }
+                    },
+                    "to": [
+                        {
+                            "key_code": "right_command",
+                            "modifiers": [
+                                "right_control",
+                                "right_option"
+                            ]
+                        }
+                    ],
+                    "type": "basic"
+                }
+            ]
+        }
+    ]
+}

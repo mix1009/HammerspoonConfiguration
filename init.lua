@@ -1,63 +1,23 @@
--- karabiner-elements setting: "simple_modifications": {"caps_lock": "f18"}
--- reference: https://github.com/lodestone/hyper-hacks/blob/master/hammerspoon/init.lua
-k = hs.hotkey.modal.new({}, "F17")
-
--- Enter Hyper Mode when F18 (Hyper/Capslock) is pressed
-pressedF18 = function()
-  -- hs.alert.show("pressed F18")
-  k.triggered = false
-  k:enter()
-end
-
--- Leave Hyper Mode when F18 (Hyper/Capslock) is pressed,
---   send ESCAPE if no other keys are pressed.
-releasedF18 = function()
-  -- hs.alert.show("released F18")
-  k:exit()
-  if not k.triggered then
-    hs.eventtap.keyStroke({}, 'ESCAPE')
-  end
-end
-
--- Bind the Hyper key
-f18 = hs.hotkey.bind({}, 'F18', pressedF18, releasedF18)
-f18s = hs.hotkey.bind({"shift"}, 'F18', pressedF18, releasedF18)
-f18c = hs.hotkey.bind({"command"}, 'F18', pressedF18, releasedF18)
-
-function pressHyperKey(key)
-  hs.eventtap.keyStroke({"cmd", "alt", "ctrl"}, key)
-end
-
-function pressHyperShiftKey(key)
-  hs.eventtap.keyStroke({"cmd", "alt", "ctrl", "shift"}, key)
-end
-
--- key bind functions (hyper / hyper-shift)
+-- use with Karabiner-Elements (https://karabiner-elements.pqrs.org/)
+--
+-- change caps lock to "Cmd+Ctrl+Option" key using below 
+-- copy and paste in browser location:
+-- karabiner://karabinder/assets/complex_modifications/import?url=https://raw.githubusercontent.com/mix1009/HammerspoonConfiguration/master/karabiner.json
+-- add complex modification "Change caps_lock to command+control+option." from Karabiner-Elmements Preferences.
+--
+-- also available from http://mix1009.com/karabiner.html
 
 function h_bind(key, func)
-  k:bind({}, key, nil, function()
-    func()
-    k.triggered = true
-  end)
+  -- hyper key (caps lock)
+  hs.hotkey.bind({"command","control","option"}, key, func)
 end
 
 function hs_bind(key, func)
-  k:bind({"shift"}, key, nil, function()
-    func()
-    k.triggered = true
-  end)
+    -- hyper+shift key (caps lock + shift)
+    hs.hotkey.bind({"command","control","option","shift"}, key, func)
 end
 
-function hc_bind(key, func)
-  k:bind({"command"}, key, nil, function()
-    func()
-    k.triggered = true
-  end)
-end
-
-
---  reload
-
+--  reload (mapped as hyper-r )
 function reloadConfig(files)
     doReload = false
     for _,file in pairs(files) do
@@ -74,7 +34,6 @@ local myWatcher = hs.pathwatcher.new(os.getenv("HOME") .. "/.hammerspoon/", relo
 hs.alert.show("HammerSpoon config loaded!")
 
 h_bind("r", function() hs.reload() end)
-
 
 -- window management functions
 
@@ -201,6 +160,7 @@ function positionWindow(x, y, w, h)
   f.y = y * s.h
   f.w = s.w * w
   f.h = s.h * h
+  hs.alert.show(f)
   win:setFrame(f)
 end
 
@@ -255,6 +215,63 @@ function moveWindowFunc(direction)
 end
 
 
+hs.window.animationDuration = 0
+
+function activateApp(name)
+  return function()
+    local win = hs.appfinder.appFromName(name)
+    if win then win:activate() end
+  end
+end
+
+function file_exists(name)
+  local f=io.open(name,"r")
+  if f~=nil then io.close(f) return true else return false end
+end
+
+function launchApp(name)
+  return function()
+    if file_exists("/Applications/" .. name .. ".app") then
+      hs.application.launchOrFocus("/Applications/" .. name .. ".app")
+      return
+    end
+    hs.application.launchOrFocus("/System/Applications/" .. name .. ".app")
+  end
+end
+
+function pressSystemKeyFunction(key)
+  -- media function with hyper-command keys
+  return function()
+    hs.eventtap.event.newSystemKeyEvent(key, true):post() 
+    hs.eventtap.event.newSystemKeyEvent(key, false):post() 
+  end
+end
+
+function speakSelectedText()
+  -- used for "Speak selected text"
+  -- Settings-Accessibility-Speech
+  -- set Key as "Command+Shift+Control+S" for speak selected text
+  return function()
+    hs.eventtap.keyStroke({"command", "shift", "ctrl"}, "s")
+  end
+end
+
+focusing = false
+function focusStartOrEnd()
+  -- focus / unfocus using Focus app. (https://heyfocus.com)
+  return function()
+    if not focusing then
+      hs.execute("open focus://focus?minutes=45")
+      focusing = true
+    else
+      hs.execute("open focus://unfocus")
+      focusing = false
+    end
+  end
+end
+
+
+-------------------------------------------------------------------------------
 -- window management key bindings
 
 h_bind("left", resizeWindowFunc("left", 1/12))
@@ -285,6 +302,10 @@ h_bind("2", function() positionWindow(0.5, 0, 0.5, 1) end)
 if #hs.screen.allScreens() > 1  then
   h_bind("3", function() positionWindow(1, 0, 0.5, 1) end)
   h_bind("4", function() positionWindow(1.5, 0, 0.5, 1) end)
+  h_bind("5", function() positionWindow(0, 0, 0.5, 0.5) end)
+  h_bind("6", function() positionWindow(0.5, 0, 0.5, 0.5) end)
+  h_bind("7", function() positionWindow(0, 0.5, 0.5, 0.5) end)
+  h_bind("8", function() positionWindow(0.5, 0.5, 0.5, 0.5) end)
 else
   h_bind("3", function() positionWindow(0, 0, 0.5, 0.5) end)
   h_bind("4", function() positionWindow(0.5, 0, 0.5, 0.5) end)
@@ -293,97 +314,44 @@ else
 end
 h_bind("f", function() toggleFullScreen() end)
 
-hs.window.animationDuration = 0
+-------------------------------------------------------------------------------
+-- app key bindings
 
--- app launch/activate key bindings
-
-function activateApp(name)
-  return function()
-    local win = hs.appfinder.appFromName(name)
-    if win then win:activate() end
-  end
-end
-
-function launchApp(name)
-  return function()
-    hs.application.launchOrFocus("/Applications/" .. name .. ".app")
-  end
-end
-
-h_bind("c", launchApp("Google Chrome"))
-h_bind("t", launchApp("iTerm"))
-hs_bind("t", function() pressHyperShiftKey("t") end)
-h_bind("d", function() pressHyperShiftKey("d") end)
---h_bind("'", function() pressHyperShiftKey("'") end)
-
-h_bind("s", launchApp("Safari"))
-
-hs_bind("s", activateApp("iOS Simulator"))
---h_bind("e", launchApp("Sublime Text"))
+h_bind("c", launchApp("Brave Browser"))
 h_bind("e", launchApp("Visual Studio Code"))
-hs_bind("e", activateApp("Evernote"))
-h_bind("x", activateApp("Xcode"))
-h_bind("u", activateApp("Unity"))
-
-hs_bind("s", activateApp("Slack"))
-hs_bind("t", activateApp("Telegram"))
-hs_bind("d", activateApp("Discord"))
-
---h_bind("b", activateApp("Blender"))
-h_bind("b", activateApp("Brave"))
-h_bind("m", activateApp("MonoDevelop-Unity"))
-h_bind("z", activateApp("Finder"))
-hs_bind("a", activateApp("Android Studio"))
-h_bind("n", launchApp("Notes"))
-h_bind("i", activateApp("iTunes"))
-hc_bind("f", activateApp("Firefox"))
-hs_bind("o", activateApp("Opera")) 
-hs_bind("q", activateApp("QuickTime Player"))
-hs_bind("c", launchApp("Calendar"))
-hs_bind("v", launchApp("VOX"))
-hs_bind("w", launchApp("Wunderlist"))
-h_bind("v", activateApp("VLC"))
-hc_bind("v", activateApp("Code"))
-h_bind("y", launchApp("SourceTree"))
+h_bind("g", launchApp("GitHub Desktop"))
+h_bind("m", launchApp("Motion"))
+h_bind("n", launchApp("Microsoft OneNote"))
+h_bind("o", activateApp("Simulator"))
 h_bind("p", launchApp("Preview"))
---h_bind("b", function()
-    --local win = hs.appfinder.appFromName("Sublime Text")
-    --if win then win:activate() end
-    --hs.eventtap.keyStroke({"cmd"}, "b")
-    --win = hs.appfinder.appFromName("Minecraft")
-    --if win then win:activate() end
---end)
+h_bind("s", launchApp("Safari"))
+h_bind("t", launchApp("iTerm"))
+h_bind("u", activateApp("Unity"))
+h_bind("x", activateApp("Xcode"))
+h_bind("y", launchApp("SourceTree"))
+h_bind("z", activateApp("Finder"))
 
--- media function with hyper-command keys
+hs_bind("a", activateApp("Android Studio"))
+hs_bind("c", launchApp("Google Chrome"))
+hs_bind("d", activateApp("Discord"))
+hs_bind("n", launchApp("Notes"))
+hs_bind("o", activateApp("Opera")) 
+hs_bind("q", launchApp("QuickTime Player"))
+hs_bind("s", activateApp("Simulator"))
+hs_bind("t", launchApp("Microsoft To Do"))
+hs_bind("v", launchApp("VOX"))
+hs_bind("x", activateApp("Final Cut Pro"))
 
-function pressSystemKeyFunction(key)
-    return function()
-      hs.eventtap.event.newSystemKeyEvent(key, true):post() 
-      hs.eventtap.event.newSystemKeyEvent(key, false):post() 
-    end
-end
+-------------------------------------------------------------------------------
+-- misc key bindings
+h_bind("a", speakSelectedText())
+hs_bind("f", focusStartOrEnd())
 
-hc_bind("left", pressSystemKeyFunction("PREVIOUS"))
-hc_bind("right", pressSystemKeyFunction("NEXT"))
-hc_bind("up", pressSystemKeyFunction("SOUND_UP"))
-hc_bind("down", pressSystemKeyFunction("SOUND_DOWN"))
-hc_bind("space", pressSystemKeyFunction("PLAY"))
+-------------------------------------------------------------------------------
+-- media key bindings
 
-
-h_bind("a", function()
-  -- hs.alert.show("hyper-shift-A")
-  -- used for "Speak selected text"
-  pressHyperShiftKey("a")
-end)
-
-focusing = false
-
-hs_bind("f", function()
-  if not focusing then
-    hs.execute("open focus://focus?minutes=45")
-    focusing = true
-  else
-    hs.execute("open focus://unfocus")
-    focusing = false
-  end
-end)
+-- hc_bind("left", pressSystemKeyFunction("PREVIOUS"))
+-- hc_bind("right", pressSystemKeyFunction("NEXT"))
+-- hc_bind("up", pressSystemKeyFunction("SOUND_UP"))
+-- hc_bind("down", pressSystemKeyFunction("SOUND_DOWN"))
+-- hc_bind("space", pressSystemKeyFunction("PLAY"))
