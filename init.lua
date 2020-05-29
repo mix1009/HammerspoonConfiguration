@@ -13,21 +13,21 @@ function h_bind(key, func)
 end
 
 function hs_bind(key, func)
-    -- hyper+shift key (caps lock + shift)
-    hs.hotkey.bind({"command","control","option","shift"}, key, func)
+  -- hyper+shift key (caps lock + shift)
+  hs.hotkey.bind({"command","control","option","shift"}, key, func)
 end
 
---  reload (mapped as hyper-r )
 function reloadConfig(files)
-    doReload = false
-    for _,file in pairs(files) do
-        if file:sub(-4) == ".lua" then
-            doReload = true
-        end
+  --  reload (mapped as hyper-r )
+  doReload = false
+  for _,file in pairs(files) do
+    if file:sub(-4) == ".lua" then
+      doReload = true
     end
-    if doReload then
-        hs.reload()
-    end
+  end
+  if doReload then
+    hs.reload()
+  end
 end
 
 local myWatcher = hs.pathwatcher.new(os.getenv("HOME") .. "/.hammerspoon/", reloadConfig):start()
@@ -62,28 +62,32 @@ function moveWindow(direction)
 end
 
 function resizeWindow(direction, increment)
+  -- hs.alert.show("resize...")
   local win = hs.window.focusedWindow()
   if win == nil then return end
   local f = win:frame()
   local s = win:screen():frame()
-  local allowedSpace = s.h/10
-  local stickedToLeft = (f.x % s.w) < allowedSpace
-  local stickedToRight = ((f.x + f.w) % s.w) > s.w - allowedSpace
-  local stickedToTop = f.y < allowedSpace
-  local stickedToBottom = f.y + f.h > s.h - allowedSpace
+  local allowedSpaceFraction = 30
+  local allowedSpaceWidth = s.w/allowedSpaceFraction
+  local allowedSpaceHeight = s.h/allowedSpaceFraction
+  local stickedToLeft = (f.x % s.w) < allowedSpaceWidth
+  local rightPos = (f.x + f.w - 1) % s.w
+  local stickedToRight = rightPos > (s.w - allowedSpaceWidth)
+  local stickedToTop = f.y < allowedSpaceHeight
+  local stickedToBottom = (f.y + f.h - 1) > (s.h - allowedSpaceHeight)
   local screenOffset = math.floor(f.x / s.w) * s.w
-
+  
   -- hs.alert.show(s.h)
-  -- hs.alert.show((f.y + f.h))
-  -- hs.alert.show(s.h - allowedSpace)
-
+  -- hs.alert.show("x=" .. f.x .. ", w=" .. f.w .. ", sw=" .. s.w .. ", rp=" .. rightPos)
+  -- hs.alert.show(stickedToRight)
+  
   if direction == "left" then
     if stickedToLeft then
       f.x = 0 + screenOffset
     elseif stickedToRight then
       f.w = f.w + s.w * increment
       f.x = s.w - f.w + screenOffset
-      if (f.x % s.w) < allowedSpace then
+      if (f.x % s.w) < allowedSpaceWidth then
         f.x = 0 + screenOffset
         f.w = s.w
       end
@@ -117,7 +121,7 @@ function resizeWindow(direction, increment)
     elseif stickedToBottom then
       f.h = f.h + s.h * increment
       f.y = s.h - f.h
-      if f.y < allowedSpace then
+      if f.y < allowedSpaceHeight then
         f.y = 0
         f.h = s.h
       end
@@ -144,7 +148,7 @@ function resizeWindow(direction, increment)
       -- hs.alert.show("stickedToBottom no")
       f.h = f.h + s.h * increment
       if f.h > s.h then
-        f.h = s.h - f.y
+        f.h = s.h
       end
       win:setFrame(f)
     end
@@ -160,7 +164,7 @@ function positionWindow(x, y, w, h)
   f.y = y * s.h
   f.w = s.w * w
   f.h = s.h * h
-  hs.alert.show(f)
+  -- hs.alert.show(f)
   win:setFrame(f)
 end
 
@@ -170,7 +174,7 @@ function positionWindowWithinScreen(x, y, w, h)
   local f = win:frame()
   local s = win:screen():frame()
   local screenOffset = math.floor(f.x / s.w) * s.w
-
+  
   f.x = x * s.w + screenOffset
   f.y = y * s.h
   f.w = s.w * w
@@ -189,11 +193,11 @@ function toggleFullScreen()
   local nf = appNormalScreenFrame[win.id]
   local ff = appFullScreenFrame[win.id]
   local screenOffset = math.floor(f.x / s.w) * s.w
-
+  
   if ff ~= nil then
     s = ff
   end
-
+  
   if f.w == s.w and f.h == s.h and nf then
     win:setFrame(nf)
   else
@@ -274,20 +278,23 @@ end
 -------------------------------------------------------------------------------
 -- window management key bindings
 
-h_bind("left", resizeWindowFunc("left", 1/12))
-h_bind("right", resizeWindowFunc("right", 1/12))
-h_bind("up", resizeWindowFunc("up", 1/8))
-h_bind("down", resizeWindowFunc("down", 1/8))
+horizontalIncrement = 1/12
+verticalIncrement = 1/8
+
+h_bind("left", resizeWindowFunc("left", horizontalIncrement))
+h_bind("right", resizeWindowFunc("right", horizontalIncrement))
+h_bind("up", resizeWindowFunc("up", verticalIncrement))
+h_bind("down", resizeWindowFunc("down", verticalIncrement))
 
 hs_bind("left", moveWindowFunc("left"))
 hs_bind("right", moveWindowFunc("right"))
 hs_bind("up", moveWindowFunc("up"))
 hs_bind("down", moveWindowFunc("down"))
 
-h_bind("h", resizeWindowFunc("left", 1/12))
-h_bind("l", resizeWindowFunc("right", 1/12))
-h_bind("k", resizeWindowFunc("up", 1/8))
-h_bind("j", resizeWindowFunc("down", 1/8))
+h_bind("h", resizeWindowFunc("left", horizontalIncrement))
+h_bind("l", resizeWindowFunc("right", horizontalIncrement))
+h_bind("k", resizeWindowFunc("up", verticalIncrement))
+h_bind("j", resizeWindowFunc("down", verticalIncrement))
 hs_bind("h", moveWindowFunc("left"))
 hs_bind("l", moveWindowFunc("right"))
 hs_bind("k", moveWindowFunc("up"))
@@ -337,21 +344,21 @@ hs_bind("d", activateApp("Discord"))
 hs_bind("n", launchApp("Notes"))
 hs_bind("o", activateApp("Opera")) 
 hs_bind("q", launchApp("QuickTime Player"))
-hs_bind("s", activateApp("Simulator"))
+hs_bind("s", activateApp("Sketch"))
 hs_bind("t", launchApp("Microsoft To Do"))
 hs_bind("v", launchApp("VOX"))
 hs_bind("x", activateApp("Final Cut Pro"))
 
 -------------------------------------------------------------------------------
--- misc key bindings
+-- misc key bindings 
 h_bind("a", speakSelectedText())
 hs_bind("f", focusStartOrEnd())
 
 -------------------------------------------------------------------------------
 -- media key bindings
 
--- hc_bind("left", pressSystemKeyFunction("PREVIOUS"))
--- hc_bind("right", pressSystemKeyFunction("NEXT"))
--- hc_bind("up", pressSystemKeyFunction("SOUND_UP"))
--- hc_bind("down", pressSystemKeyFunction("SOUND_DOWN"))
--- hc_bind("space", pressSystemKeyFunction("PLAY"))
+-- hs_bind("left", pressSystemKeyFunction("PREVIOUS"))
+-- hs_bind("right", pressSystemKeyFunction("NEXT"))
+-- hs_bind("up", pressSystemKeyFunction("SOUND_UP"))
+-- hs_bind("down", pressSystemKeyFunction("SOUND_DOWN"))
+-- hs_bind("space", pressSystemKeyFunction("PLAY"))
