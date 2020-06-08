@@ -5,7 +5,7 @@
 -- karabiner://karabinder/assets/complex_modifications/import?url=https://raw.githubusercontent.com/mix1009/HammerspoonConfiguration/master/karabiner.json
 -- add complex modification "Change caps_lock to command+control+option." from Karabiner-Elmements Preferences.
 --
--- also available from http://mix1009.com/karabiner.html
+-- also available from https://mix1009.com/karabiner.html
 
 function h_bind(key, func)
   -- hyper key (caps lock)
@@ -341,8 +341,10 @@ h_bind("z", activateApp("Finder"))
 hs_bind("a", activateApp("Android Studio"))
 hs_bind("c", launchApp("Google Chrome"))
 hs_bind("d", activateApp("Discord"))
+hs_bind("e", activateApp("qemu-system-x86_64"))
 hs_bind("n", launchApp("Notes"))
 hs_bind("o", activateApp("Opera")) 
+hs_bind("p", launchApp("System Preferences"))
 hs_bind("q", launchApp("QuickTime Player"))
 hs_bind("s", activateApp("Sketch"))
 hs_bind("t", launchApp("Microsoft To Do"))
