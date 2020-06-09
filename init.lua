@@ -40,117 +40,63 @@ h_bind("r", function() hs.reload() end)
 function moveWindow(direction)
   local win = hs.window.focusedWindow()
   if win == nil then return end
-  local f = win:frame()
-  local s = win:screen():frame()
+
   if direction == "left" then
-    f.x = f.x - s.w / 12
-    --if f.x < 0 then f.x = 0 end
-    win:setFrame(f)
+    hs.grid.pushWindowLeft(win)
   elseif direction == "right" then
-    f.x = f.x + s.w / 12
-    --if f.x + f.w > s.w then f.x = s.w - f.w end
-    win:setFrame(f)
+    hs.grid.pushWindowRight(win)
   elseif direction == "up" then
-    f.y = f.y - s.h / 8
-    --if f.y < 0 then f.y = 0 end
-    win:setFrame(f)
+    hs.grid.pushWindowUp(win)
   elseif direction == "down" then
-    f.y = f.y + s.h / 8
-    --if f.y + f.h > s.h then f.y = s.h - f.h end
-    win:setFrame(f)
+    hs.grid.pushWindowDown(win)
   end
 end
 
-function resizeWindow(direction, increment)
-  -- hs.alert.show("resize...")
+function resizeWindowWithGrid(direction)
   local win = hs.window.focusedWindow()
-  if win == nil then return end
-  local f = win:frame()
-  local s = win:screen():frame()
-  local allowedSpaceFraction = 30
-  local allowedSpaceWidth = s.w/allowedSpaceFraction
-  local allowedSpaceHeight = s.h/allowedSpaceFraction
-  local stickedToLeft = (f.x % s.w) < allowedSpaceWidth
-  local rightPos = (f.x + f.w - 1) % s.w
-  local stickedToRight = rightPos > (s.w - allowedSpaceWidth)
-  local stickedToTop = f.y < allowedSpaceHeight
-  local stickedToBottom = (f.y + f.h - 1) > (s.h - allowedSpaceHeight)
-  local screenOffset = math.floor(f.x / s.w) * s.w
-  
-  -- hs.alert.show(s.h)
-  -- hs.alert.show("x=" .. f.x .. ", w=" .. f.w .. ", sw=" .. s.w .. ", rp=" .. rightPos)
-  -- hs.alert.show(stickedToRight)
-  
-  if direction == "left" then
-    if stickedToLeft then
-      f.x = 0 + screenOffset
-    elseif stickedToRight then
-      f.w = f.w + s.w * increment
-      f.x = s.w - f.w + screenOffset
-      if (f.x % s.w) < allowedSpaceWidth then
-        f.x = 0 + screenOffset
-        f.w = s.w
-      end
-      win:setFrame(f)
-      return
-    end
-    f.w = f.w - s.w * increment
-    if f.w < s.w*increment then
-      f.w = s.w * increment
-    end
-    win:setFrame(f)
-  elseif direction == "right" then
-    if stickedToRight then
-      f.w = f.w - s.w * increment
-      f.x = s.w - f.w + screenOffset
-      if f.w < s.w*increment then
-        f.w = s.w * increment
-        f.x = s.w - f.w + screenOffset
-      end
-      win:setFrame(f)
+  local screen = win:screen()
+  sg = hs.grid.getGrid(screen)
+  f = hs.grid.get(win)
+  -- hs.alert.show("w: " .. f.w .. ", sg: " .. sg.w)
+  -- hs.alert.show(f)
+  -- hs.alert.show(f.x + f.w)
+  if direction == 'left' then
+    if f.x + f.w >= sg.w and f.x ~= 0 then
+      f.x = f.x -1
+      f.w = f.w + 1
+      hs.grid.set(win, f)
     else
-      f.w = f.w + s.w * increment
-      if f.w > s.w then
-        f.w = s.w - f.x
-      end
-      win:setFrame(f)
+      f.w = f.w - 1
+      hs.grid.set(win, f)
     end
-  elseif direction == "up" then
-    if stickedToTop then
-      f.y = 0
-    elseif stickedToBottom then
-      f.h = f.h + s.h * increment
-      f.y = s.h - f.h
-      if f.y < allowedSpaceHeight then
-        f.y = 0
-        f.h = s.h
-      end
-      win:setFrame(f)
-      return
-    end
-    f.h = f.h - s.h * increment
-    if f.h < s.h*increment then
-      f.h = s.h * increment
-    end
-    win:setFrame(f)
-  elseif direction == "down" then
-    if stickedToBottom then
-      -- hs.alert.show("stickedToBottom")
-      f.h = f.h - s.h * increment
-      f.y = s.h - f.h
-      if f.h < s.h*increment then
-        -- hs.alert.show("stickedToBottom - set to minimum")
-        f.h = s.h * increment
-        f.y = s.h - f.h
-      end
-      win:setFrame(f)
+  elseif direction == 'right' then
+    if f.x + f.w == sg.w  then
+
+      f.x = f.x + 1
+      f.w = f.w - 1
+      hs.grid.set(win, f)
     else
-      -- hs.alert.show("stickedToBottom no")
-      f.h = f.h + s.h * increment
-      if f.h > s.h then
-        f.h = s.h
-      end
-      win:setFrame(f)
+      f.w = f.w + 1
+      hs.grid.set(win, f)
+    end
+  elseif direction == 'up' then
+    if f.y + f.h >= sg.h and f.y ~= 0 then
+      f.y = f.y -1
+      f.h = f.h + 1
+      hs.grid.set(win, f)
+    else
+      f.h = f.h - 1
+      hs.grid.set(win, f)
+    end
+  elseif direction == 'down' then
+    if f.y + f.h == sg.h  then
+
+      f.y = f.y + 1
+      f.h = f.h - 1
+      hs.grid.set(win, f)
+    else
+      f.h = f.h + 1
+      hs.grid.set(win, f)
     end
   end
 end
@@ -210,8 +156,8 @@ function toggleFullScreen()
   end
 end
 
-function resizeWindowFunc(direction, increment)
-  return function() resizeWindow(direction, increment) end
+function resizeWindowFunc(direction)
+  return function() resizeWindowWithGrid(direction) end
 end
 
 function moveWindowFunc(direction)
@@ -278,27 +224,30 @@ end
 -------------------------------------------------------------------------------
 -- window management key bindings
 
-horizontalIncrement = 1/12
-verticalIncrement = 1/8
+hs.grid.setGrid('12x8')
+hs.grid.setMargins(hs.geometry(0,0))
 
-h_bind("left", resizeWindowFunc("left", horizontalIncrement))
-h_bind("right", resizeWindowFunc("right", horizontalIncrement))
-h_bind("up", resizeWindowFunc("up", verticalIncrement))
-h_bind("down", resizeWindowFunc("down", verticalIncrement))
+h_bind("left", resizeWindowFunc("left"))
+h_bind("right", resizeWindowFunc("right"))
+h_bind("up", resizeWindowFunc("up"))
+h_bind("down", resizeWindowFunc("down"))
 
 hs_bind("left", moveWindowFunc("left"))
 hs_bind("right", moveWindowFunc("right"))
 hs_bind("up", moveWindowFunc("up"))
 hs_bind("down", moveWindowFunc("down"))
 
-h_bind("h", resizeWindowFunc("left", horizontalIncrement))
-h_bind("l", resizeWindowFunc("right", horizontalIncrement))
-h_bind("k", resizeWindowFunc("up", verticalIncrement))
-h_bind("j", resizeWindowFunc("down", verticalIncrement))
+h_bind("h", resizeWindowFunc("left"))
+h_bind("l", resizeWindowFunc("right"))
+h_bind("k", resizeWindowFunc("up"))
+h_bind("j", resizeWindowFunc("down"))
 hs_bind("h", moveWindowFunc("left"))
 hs_bind("l", moveWindowFunc("right"))
 hs_bind("k", moveWindowFunc("up"))
 hs_bind("j", moveWindowFunc("down"))
+
+-- hs.grid.ui.textSize = 50
+-- hs_bind("g", function() hs.grid.show() end)
 
 h_bind("q", function() positionWindowWithinScreen(0, 0, 0.667, 1) end)
 h_bind("w", function() positionWindowWithinScreen(0.667, 0, 0.333, 1) end)
